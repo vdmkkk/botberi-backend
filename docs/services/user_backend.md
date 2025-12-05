@@ -51,6 +51,7 @@ Redis is mandatory for throttling and slug TTLs—tests rely on `fakeredis`, but
 
 - Publishes `instance.created`, `instance.updated`, `instance.deleted` through `event_broker`.
 - Subscribes to `instance.updated` to push to clients.
+- Postgres triggers (`notify_domain_event`) fire on every insert/update/delete for `instances`, `knowledge_bases`, and `knowledge_base_entries`. `event_broker` listens on `instances_notify` and republishes to RabbitMQ, so API code no longer emits events directly.
 
 ## Testing
 

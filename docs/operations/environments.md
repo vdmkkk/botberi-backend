@@ -24,7 +24,6 @@
 | `PASSWORD_RESET_URL_TEMPLATE`                       | Frontend link template used in password reset emails. |
 | `EMAIL_SENDER` / `VERIFICATION_EMAIL_SUBJECT` / `PASSWORD_RESET_EMAIL_SUBJECT` | Email metadata for transactional messages. |
 | `FRONTEND_PROFILE_URL`                              | Used for linking out of emails/logs.  |
-| `EVENT_EXCHANGE`, `EVENT_EMIT_ENABLED`              | RabbitMQ exchange name + toggle for emitting domain events. |
 
 ## Profiles
 

@@ -12,7 +12,6 @@ from app.schemas import (
     KnowledgeBaseEntryCreate,
     KnowledgeBaseEntryOut,
 )
-from app.services.event_bus import emit_event
 from shared_psql_models.models import (
     Agent,
     Instance,
@@ -49,21 +48,6 @@ async def create_instance(
     await shared_db.refresh(instance)
     await shared_db.refresh(knowledge_base)
 
-    await emit_event(
-        "instance.created",
-        {
-            "instance_id": instance.id,
-            "bot_id": instance.bot_id,
-            "user_id": current_user.id,
-        },
-    )
-    await emit_event(
-        "knowledge_base.created",
-        {
-            "knowledge_base_id": knowledge_base.id,
-            "instance_id": instance.id,
-        },
-    )
     instance.knowledge_base = knowledge_base
     return InstanceOut.model_validate(instance)
 
@@ -114,10 +98,6 @@ async def update_instance(
 
     await shared_db.commit()
     await shared_db.refresh(instance)
-    await emit_event(
-        "instance.updated",
-        {"instance_id": instance.id, "user_id": current_user.id},
-    )
     return InstanceOut.model_validate(instance)
 
 
@@ -130,7 +110,6 @@ async def delete_instance(
     instance = await _get_instance(shared_db, current_user.id, instance_id, load_relations=False)
     await shared_db.delete(instance)
     await shared_db.commit()
-    await emit_event("instance.deleted", {"instance_id": instance_id, "user_id": current_user.id})
 
 
 @router.post("/{instance_id}/knowledge-base/entries", response_model=KnowledgeBaseEntryOut, status_code=status.HTTP_201_CREATED)
@@ -152,14 +131,6 @@ async def add_knowledge_base_entry(
     shared_db.add(entry)
     await shared_db.commit()
     await shared_db.refresh(entry)
-    await emit_event(
-        "knowledge_base.entry.created",
-        {
-            "knowledge_base_id": instance.knowledge_base.id,
-            "entry_id": entry.id,
-            "instance_id": instance.id,
-        },
-    )
     return KnowledgeBaseEntryOut.model_validate(entry)
 
 
@@ -202,14 +173,6 @@ async def delete_knowledge_base_entry(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Entry not found")
     await shared_db.delete(entry)
     await shared_db.commit()
-    await emit_event(
-        "knowledge_base.entry.deleted",
-        {
-            "knowledge_base_id": instance.knowledge_base.id,
-            "entry_id": entry_id,
-            "instance_id": instance.id,
-        },
-    )
 
 
 async def _get_instance(

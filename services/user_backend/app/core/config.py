@@ -25,9 +25,6 @@ class Settings(BaseSettings):
     verification_email_subject: str = "Complete your Botberi signup"
     password_reset_email_subject: str = "Botberi password reset"
     frontend_profile_url: str = "https://app.local/profile"
-    event_exchange: str = "events.topic"
-    event_emit_enabled: bool = True
-
     model_config = SettingsConfigDict(env_file=(".env",), env_file_encoding="utf-8", extra="allow")
 
 

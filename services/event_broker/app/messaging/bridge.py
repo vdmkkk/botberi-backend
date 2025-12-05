@@ -1,4 +1,5 @@
 import asyncio
+import json
 from typing import Any
 
 import aio_pika
@@ -50,6 +51,10 @@ class EventBridge:
     async def _publish(self, payload: str) -> None:
         assert self._channel is not None
 
+        routing_key, message_body = self._prepare_message(payload)
+        if routing_key is None or message_body is None:
+            return
+
         async for attempt in AsyncRetrying(
             retry=retry_if_exception_type(Exception),
             wait=wait_exponential(multiplier=0.2, min=0.5, max=5),
@@ -60,8 +65,26 @@ class EventBridge:
                     self._settings.outgoing_exchange, aio_pika.ExchangeType.TOPIC
                 )
                 await exchange.publish(
-                    aio_pika.Message(body=payload.encode("utf-8")),
-                    routing_key="instance.updated",
+                    aio_pika.Message(
+                        body=message_body,
+                        content_type="application/json",
+                    ),
+                    routing_key=routing_key,
                 )
+
+    def _prepare_message(self, payload: str) -> tuple[str | None, bytes | None]:
+        try:
+            data = json.loads(payload)
+        except json.JSONDecodeError:
+            print(f"[event_broker] invalid JSON payload: {payload}")
+            return None, None
+
+        routing_key = data.get("routing_key")
+        if not routing_key:
+            print(f"[event_broker] missing routing key in payload: {payload}")
+            return None, None
+
+        body = json.dumps(data).encode("utf-8")
+        return routing_key, body
 
 
