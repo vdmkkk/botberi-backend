@@ -16,6 +16,14 @@
 | `REDIS_URL`                                         | Redis endpoint for Celery + caching.  |
 | `RABBITMQ_URL`                                      | AMQP connection string.               |
 | `JWT_SECRET`, `JWT_ALG`                             | Auth tokens.                          |
+| `JWT_ACCESS_TTL_SECONDS`                            | Expiry window for issued access JWTs. |
+| `AUTH_COOKIE_NAME`                                  | Name of the HttpOnly cookie storing JWTs. |
+| `REGISTRATION_CODE_TTL_SECONDS`                     | Lifetime of email verification codes. |
+| `REGISTRATION_CODE_COOLDOWN_SECONDS`                | Cooldown before a user can request another code. |
+| `PASSWORD_RESET_TTL_SECONDS`                        | Validity window for password reset slugs. |
+| `PASSWORD_RESET_URL_TEMPLATE`                       | Frontend link template used in password reset emails. |
+| `EMAIL_SENDER` / `VERIFICATION_EMAIL_SUBJECT` / `PASSWORD_RESET_EMAIL_SUBJECT` | Email metadata for transactional messages. |
+| `FRONTEND_PROFILE_URL`                              | Used for linking out of emails/logs.  |
 
 ## Profiles
 

@@ -8,6 +8,7 @@ from sqlalchemy.engine import Connection
 from alembic import context
 from app.core.config import get_settings
 from app.db import base  # noqa: F401
+from app import models  # noqa: F401
 
 config = context.config
 
