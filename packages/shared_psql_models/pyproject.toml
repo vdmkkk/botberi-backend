@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=65.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "shared-psql-models"
+version = "0.1.0"
+description = "Shared SQLAlchemy models + Pydantic schemas for the shared_psql database."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { text = "Proprietary" }
+dependencies = [
+    "sqlalchemy[asyncio]>=2.0.31,<3.0.0",
+    "pydantic>=2.8.2,<3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "mypy>=1.11.1",
+]
+
+[tool.setuptools.package-data]
+shared_psql_models = ["py.typed"]
+
+

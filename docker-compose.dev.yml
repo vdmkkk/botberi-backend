@@ -1,0 +1,201 @@
+name: ${COMPOSE_PROJECT_NAME:-botberi_dev}
+services:
+  user_backend:
+    build:
+      context: .
+      dockerfile: services/user_backend/Dockerfile
+      args:
+        INSTALL_DEV: "true"
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT:-8010} --reload
+    env_file:
+      - environments/dev/user_backend.env.example
+    ports:
+      - "8010:8010"
+    volumes:
+      - ./services/user_backend:/app
+    depends_on:
+      user_psql:
+        condition: service_healthy
+      shared_psql:
+        condition: service_healthy
+      user_redis:
+        condition: service_started
+      event_bus:
+        condition: service_started
+    networks:
+      - botberi_net
+
+  admin_backend:
+    build:
+      context: .
+      dockerfile: services/admin_backend/Dockerfile
+      args:
+        INSTALL_DEV: "true"
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT:-8020} --reload
+    env_file:
+      - environments/dev/admin_backend.env.example
+    ports:
+      - "8020:8020"
+    volumes:
+      - ./services/admin_backend:/app
+    depends_on:
+      shared_psql:
+        condition: service_healthy
+      event_bus:
+        condition: service_started
+    networks:
+      - botberi_net
+
+  event_broker:
+    build:
+      context: .
+      dockerfile: services/event_broker/Dockerfile
+      args:
+        INSTALL_DEV: "true"
+    command: >
+      uvicorn app.main:app --host 0.0.0.0 --port ${API_PORT:-8030} --reload
+    env_file:
+      - environments/dev/event_broker.env.example
+    ports:
+      - "8030:8030"
+    volumes:
+      - ./services/event_broker:/app
+    depends_on:
+      shared_psql:
+        condition: service_healthy
+      event_bus:
+        condition: service_started
+    networks:
+      - botberi_net
+
+  celery_worker:
+    build:
+      context: .
+      dockerfile: services/user_backend/Dockerfile
+      args:
+        INSTALL_DEV: "true"
+    command: celery -A app.core.celery_app worker -l info
+    env_file:
+      - environments/dev/user_backend.env.example
+    depends_on:
+      user_backend:
+        condition: service_started
+      event_bus:
+        condition: service_started
+      user_redis:
+        condition: service_started
+    networks:
+      - botberi_net
+
+  flower:
+    image: mher/flower:2.0.1
+    command: >
+      celery --broker=${RABBITMQ_URL:-amqp://botberi_rmq:botberi_rmq@event_bus:5672//} flower --port=4400
+    ports:
+      - "4400:4400"
+    environment:
+      - FLOWER_BASIC_AUTH=admin:admin
+    depends_on:
+      event_bus:
+        condition: service_started
+    networks:
+      - botberi_net
+
+  user_psql:
+    image: postgres:16
+    env_file:
+      - environments/dev/user_psql.env.example
+    ports:
+      - "5430:5432"
+    volumes:
+      - user_psql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - botberi_net
+
+  shared_psql:
+    image: postgres:16
+    env_file:
+      - environments/dev/shared_psql.env.example
+    ports:
+      - "5440:5432"
+    volumes:
+      - shared_psql_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - botberi_net
+
+  user_redis:
+    image: redis:7-alpine
+    env_file:
+      - environments/dev/user_redis.env.example
+    command: ["redis-server", "--save", "60", "1", "--loglevel", "warning"]
+    ports:
+      - "6600:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    networks:
+      - botberi_net
+
+  event_bus:
+    image: rabbitmq:3.13-management
+    env_file:
+      - environments/dev/rabbitmq.env.example
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    networks:
+      - botberi_net
+
+  nginx:
+    build:
+      context: ./infra/nginx
+    ports:
+      - "8080:80"
+    depends_on:
+      user_backend:
+        condition: service_started
+      admin_backend:
+        condition: service_started
+    networks:
+      - botberi_net
+
+  grafana:
+    image: grafana/grafana:10.4.5
+    ports:
+      - "4600:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    volumes:
+      - ./infra/grafana/provisioning:/etc/grafana/provisioning
+      - grafana_data:/var/lib/grafana
+    networks:
+      - botberi_net
+
+networks:
+  botberi_net:
+    name: ${NETWORK_NAME:-botberi_net}
+
+volumes:
+  user_psql_data:
+  shared_psql_data:
+  rabbitmq_data:
+  grafana_data:
+
+

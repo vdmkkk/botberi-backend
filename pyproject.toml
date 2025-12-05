@@ -1,0 +1,18 @@
+[build-system]
+requires = ["setuptools>=65.0.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+extend-exclude = ["alembic/versions"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = [
+    "services/user_backend/tests",
+    "services/admin_backend/tests",
+    "services/event_broker/tests",
+]
+
+

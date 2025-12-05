@@ -1,0 +1,18 @@
+This repository is designed to be LLM-friendly. Follow the rules below whenever you edit code, infra, or documentation:
+
+1. **Documentation is mandatory.** Update the relevant file under `docs/` whenever business logic, event contracts, data ownership, or operational behavior changes. Never leave TODOs undocumented.
+2. **Migrations are non-optional.** Any change to persistent models must include Alembic migrations for every affected service (`user_backend`, `admin_backend`, `event_broker`, etc.). Never apply ad-hoc SQL directly.
+3. **Tests first.** Add or update tests (unit, integration, contract) that cover new or changed behavior. Use `pytest` and keep coverage high.
+4. **Lint + type-check before pushing.** Run `ruff check`, `ruff format`, and `pytest` locally (see `docs/operations/testing.md`).
+5. **Agents & instances.** Business rules, status enums, and cross-service flows live in `docs/architecture/agents.md`. Update it (and event docs) whenever you touch that domain. Remember: agent/instance data stays in `shared_psql`; `user_psql` is for auth-only.
+6. **Shared models package.** `packages/shared_psql_models` is the canonical schema for `shared_psql`. Import from it instead of redefining models, bump its version on breaking changes, update `docs/services/shared_psql_models.md` + relevant architecture docs, and regenerate migrations in dependent services.
+7. **Event bus discipline.** When creating/modifying RabbitMQ events, update `docs/architecture/event_bus.md` with payload schemas, publishers, subscribers, and side effects.
+8. **Celery scope.** Only `user_backend` and `admin_backend` may define Celery tasks; within those services all async work must route through Celery, be documented, and include queue/retry details plus Flower monitoring notes.
+9. **Environment parity.** Keep `environments/dev` and `environments/prod` templates in sync. Never hardcode secrets.
+10. **Swagger completeness.** Every FastAPI endpoint must include response models, error codes, and descriptions. Keep tags consistent.
+11. **Do not delete unexplained artifacts.** If something looks unused, investigate and document before removal.
+12. **Communicate assumptions.** When behavior is unclear, document the assumption directly in the PR description and update docs with open questions if needed.
+
+If in doubt, stop and document. This file should be kept up to date with any new repo-wide expectations.
+
+

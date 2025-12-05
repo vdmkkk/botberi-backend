@@ -1,0 +1,25 @@
+{
+  "annotations": {
+    "list": []
+  },
+  "panels": [
+    {
+      "id": 1,
+      "title": "Celery Tasks Processed",
+      "type": "stat",
+      "datasource": "CeleryMetrics",
+      "targets": [
+        {
+          "expr": "celery_tasks_total"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 38,
+  "version": 1,
+  "title": "Celery Overview",
+  "refresh": "10s",
+  "timezone": "browser"
+}
+
+

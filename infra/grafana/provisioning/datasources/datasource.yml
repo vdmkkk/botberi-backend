@@ -1,0 +1,10 @@
+apiVersion: 1
+datasources:
+  - name: CeleryMetrics
+    type: prometheus
+    access: proxy
+    url: http://flower:4400/metrics
+    isDefault: false
+    editable: true
+
+
