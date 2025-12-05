@@ -20,37 +20,60 @@ RabbitMQ (`event_bus`) is the canonical channel for cross-service communication.
 ### `instance.created`
 
 - **Routing key:** `instance.created`
-- **Published by:** `event_broker` after `shared_psql` insert / API create.
+- **Published by:** `user_backend` on API create (and later mirrored by `event_broker` once NOTIFY triggers exist).
 - **Payload:**
   ```json
   {
-    "instance_id": "<uuid>",
-    "agent_id": "<uuid>",
-    "user_id": "<uuid>",
-    "config": { "...": "..." },
-    "created_at": "2025-01-01T12:00:00Z",
-    "status": "pending"
+    "instance_id": 42,
+    "bot_id": 7,
+    "user_id": 10,
+    "title": "My Agent",
+    "status": "pending",
+    "user_config": { "...": "..." },
+    "pipeline_config": { "...": "..." }
   }
   ```
-- **Consumers:** `agents_worker`, `admin_backend` (audit).
-- **Side effects:** Kick off agent pipeline.
+- **Consumers:** `agents_worker`, `admin_backend` (audit), `user_backend` WebSocket fan-out.
+- **Side effects:** Kick off agent pipeline, create orchestration jobs.
 
 ### `instance.updated`
 
 - **Routing key:** `instance.updated`
-- **Published by:** `event_broker` when `shared_psql` row changes.
+- **Published by:** `user_backend` + `event_broker` when `shared_psql` row changes.
 - **Payload fields:**
   - `instance_id`
-  - `status` (enum: `pending`, `running`, `failed`, `stopped`)
-  - `metadata` (optional)
+  - `status` (enum: `pending`, `provisioning`, `running`, `failed`, `stopped`)
+  - Optional diffs (`user_config`, `pipeline_config`, `title`)
   - `updated_at`
 - **Consumers:** `user_backend` (push via WS), `admin_backend`.
 
 ### `instance.deleted`
 
 - **Routing key:** `instance.deleted`
-- **Published by:** `user_backend` API delete -> `event_broker`.
-- **Consumers:** `agents_worker` (cleanup), `admin_backend`.
+- **Published by:** `user_backend` after API delete (event_broker mirrors for consumers).
+- **Payload:** `instance_id`, `bot_id`, `user_id`.
+- **Consumers:** `agents_worker` (cleanup), `admin_backend`, analytics sinks.
+
+### `knowledge_base.created`
+
+- **Routing key:** `knowledge_base.created`
+- **Published by:** `user_backend` immediately after creating an instance.
+- **Payload:** `knowledge_base_id`, `instance_id`, `user_id`.
+- **Consumers:** `agents_worker` (prep per-instance KB pipelines).
+
+### `knowledge_base.entry.created`
+
+- **Routing key:** `knowledge_base.entry.created`
+- **Published by:** `user_backend` whenever a user uploads KB material.
+- **Payload:** `knowledge_base_id`, `entry_id`, `instance_id`, `data_type`, `lang_hint`.
+- **Consumers:** `agents_worker` (ingest new material), `admin_backend` (audit).
+
+### `knowledge_base.entry.deleted`
+
+- **Routing key:** `knowledge_base.entry.deleted`
+- **Published by:** `user_backend`.
+- **Payload:** `knowledge_base_id`, `entry_id`, `instance_id`.
+- **Consumers:** `agents_worker` (stop processing removed material), `admin_backend`.
 
 ### `agent.published`
 

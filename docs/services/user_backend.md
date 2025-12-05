@@ -31,6 +31,22 @@
 
 Redis is mandatory for throttling and slug TTLs—tests rely on `fakeredis`, but runtime should point to the `user_redis` container defined in Compose.
 
+## Agent Catalog API
+
+- `GET /api/v1/agents`: fetches the entire catalog from `shared_psql` (via `shared_psql_models.Agent`), used by the frontend to render the marketplace.
+- `GET /api/v1/agents/{id}`: fetch a single agent by primary key.
+- These routes are **read-only**; writes go through `admin_backend`.
+- Dependencies pull from `SHARED_PG_DSN` using `app.db.shared_session`. Keep this DSN configured in both dev/prod env templates.
+
+## Instance & Knowledge Base API
+
+- `POST /api/v1/instances`: validates the agent (`bot_id`), creates the instance row + an empty knowledge base, emits `instance.created` and `knowledge_base.created`.
+- `GET /api/v1/instances` / `GET /api/v1/instances/{id}`: list or fetch the caller's instances (scoped by `user_id`).
+- `PATCH /api/v1/instances/{id}`: update `title`, `user_config`, or `pipeline_config`; emits `instance.updated`.
+- `DELETE /api/v1/instances/{id}`: cascades knowledge base + entries, emits `instance.deleted`.
+- Knowledge base management lives under `/api/v1/instances/{id}/knowledge-base/entries` (create/list/delete). Every mutation emits the corresponding `knowledge_base.entry.*` event.
+- All writes occur in `shared_psql` via `shared_psql_models` + the shared session helper. Never touch agent tables from this service.
+
 ## Event Integration
 
 - Publishes `instance.created`, `instance.updated`, `instance.deleted` through `event_broker`.

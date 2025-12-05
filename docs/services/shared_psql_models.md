@@ -5,7 +5,12 @@ Canonical SQLAlchemy + Pydantic definitions for the `shared_psql` database live 
 ## Responsibilities
 
 - Own the declarative `Base` and naming conventions for constraints.
-- Provide reusable SQLAlchemy models (agents, instances, enums) and shared Pydantic schemas for API responses/events.
+- Provide reusable SQLAlchemy models (agents, instances, knowledge bases, enums) and shared Pydantic schemas for API responses/events.
+- Current release (`v0.3.0`) covers:
+  - `agents`: serial `id`, `title`, `content` (JSONB-compatible), unique `activation_code`, `rate`.
+  - `instances`: serial `id`, FK `bot_id`, `user_id`, `title`, `user_config`, `pipeline_config`, `status` enum.
+  - `knowledge_bases`: one-to-one with instances.
+  - `knowledge_base_entries`: `content`, optional `data_type`/`lang_hint`, `status` enum.
 - Version the shared schema: bump the package version whenever a breaking DB change occurs.
 
 ## Usage Pattern

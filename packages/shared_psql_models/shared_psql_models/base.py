@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from sqlalchemy import MetaData, func
+from sqlalchemy import JSON, MetaData, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
+from sqlalchemy.types import TypeDecorator
 
 _naming_convention = {
     "ix": "ix_%(column_0_label)s",
@@ -32,6 +33,20 @@ class TimestampMixin:
     )
 
 
-__all__ = ["Base", "TimestampMixin"]
+class JSONBCompat(TypeDecorator):
+    """Compiles to JSONB on Postgres and JSON elsewhere (for local tests)."""
+
+    impl = JSON
+    cache_ok = True
+
+    def load_dialect_impl(self, dialect):
+        if dialect.name == "postgresql":
+            from sqlalchemy.dialects.postgresql import JSONB
+
+            return dialect.type_descriptor(JSONB(astext_type=Text()))
+        return dialect.type_descriptor(JSON())
+
+
+__all__ = ["Base", "TimestampMixin", "JSONBCompat"]
 
 

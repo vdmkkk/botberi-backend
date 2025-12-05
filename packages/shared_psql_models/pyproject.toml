@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "shared-psql-models"
-version = "0.1.0"
+version = "0.3.0"
 description = "Shared SQLAlchemy models + Pydantic schemas for the shared_psql database."
 readme = "README.md"
 requires-python = ">=3.12"

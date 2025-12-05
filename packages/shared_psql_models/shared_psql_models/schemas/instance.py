@@ -1,26 +1,48 @@
-from uuid import UUID
-
 from pydantic import BaseModel
 
-from shared_psql_models.models.instance import InstanceStatus
+from shared_psql_models.models.instance import (
+    InstanceStatus,
+    KBDataType,
+    KBEntryStatus,
+    KBLangHint,
+)
 
 
-class InstanceSchema(BaseModel):
-    """Pydantic representation shared across services."""
-
-    id: UUID
-    agent_id: UUID
-    user_id: UUID
-    status: InstanceStatus
-    config: dict
-    metadata: dict | None = None
-    last_error: str | None = None
-    display_name: str | None = None
+class KnowledgeBaseEntrySchema(BaseModel):
+    id: int
+    knowledge_base_id: int
+    content: str
+    data_type: KBDataType | None = None
+    lang_hint: KBLangHint | None = None
+    status: KBEntryStatus
 
     class Config:
         from_attributes = True
 
 
-__all__ = ["InstanceSchema"]
+class KnowledgeBaseSchema(BaseModel):
+    id: int
+    instance_id: int
+    entries: list[KnowledgeBaseEntrySchema] = []
+
+    class Config:
+        from_attributes = True
+
+
+class InstanceSchema(BaseModel):
+    id: int
+    bot_id: int
+    user_id: int
+    title: str
+    user_config: dict
+    pipeline_config: dict
+    status: InstanceStatus
+    knowledge_base: KnowledgeBaseSchema | None = None
+
+    class Config:
+        from_attributes = True
+
+
+__all__ = ["InstanceSchema", "KnowledgeBaseSchema", "KnowledgeBaseEntrySchema"]
 
 

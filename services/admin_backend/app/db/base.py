@@ -1,7 +1,3 @@
-from sqlalchemy.orm import DeclarativeBase
-
-
-class Base(DeclarativeBase):
-    pass
+from shared_psql_models import Base  # re-export shared metadata
 
 

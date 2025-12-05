@@ -1,6 +1,10 @@
 from .agent import AgentSchema
-from .instance import InstanceSchema
+from .instance import (
+    InstanceSchema,
+    KnowledgeBaseEntrySchema,
+    KnowledgeBaseSchema,
+)
 
-__all__ = ["AgentSchema", "InstanceSchema"]
+__all__ = ["AgentSchema", "InstanceSchema", "KnowledgeBaseSchema", "KnowledgeBaseEntrySchema"]
 
 

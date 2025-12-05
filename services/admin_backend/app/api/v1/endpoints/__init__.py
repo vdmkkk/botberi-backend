@@ -1,5 +1,5 @@
-from . import health
+from . import agents, health
 
-__all__ = ["health"]
+__all__ = ["health", "agents"]
 
 

@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.core.security import decode_token
 from app.crud import users as user_crud
 from app.db.session import async_session_factory
+from app.db.shared_session import get_shared_session
 from app.services.cache import get_redis_client
 
 settings = get_settings()
@@ -55,5 +56,10 @@ def _extract_token(request: Request) -> str | None:
     return request.headers.get("X-Session-Token")
 
 
-__all__ = ["get_db", "get_current_user", "get_redis"]
+async def get_shared_db() -> AsyncGenerator[AsyncSession, None]:
+    async for session in get_shared_session():
+        yield session
+
+
+__all__ = ["get_db", "get_current_user", "get_redis", "get_shared_db"]
 
